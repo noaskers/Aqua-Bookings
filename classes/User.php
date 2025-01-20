@@ -4,7 +4,8 @@ class User {
     private $table_name = "Users";
 
     public $user_id;
-    public $username;
+    public $username;Wat is overerving in OOP?
+
     public $password;
     public $email;
     public $is_admin;

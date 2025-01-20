@@ -25,13 +25,13 @@ if (isset($_GET['id'])) {
         $stmt->bind_param("i", $boat_id);
         $stmt->execute();
 
-        header("Location: rents.php");
+        header("Location: current_rents.php");
         exit();
     } else {
         $error = "Error: " . $stmt->error;
     }
 } else {
-    header("Location: rents.php");
+    header("Location: current_rents.php");
     exit();
 }
 ?>
