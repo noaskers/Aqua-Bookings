@@ -9,8 +9,10 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 
-// Fetch rents for the logged-in user
-$query = "SELECT * FROM Rents WHERE user_id = ?";
+// Fetch rents for the logged-in user with boat names
+$query = "SELECT Rents.*, Boats.name AS boat_name FROM Rents 
+          JOIN Boats ON Rents.boat_id = Boats.boat_id 
+          WHERE Rents.user_id = ?";
 $stmt = $conn->prepare($query);
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -27,7 +29,7 @@ $result = $stmt->get_result();
         <thead>
             <tr>
                 <th>ID</th>
-                <th>Boat ID</th>
+                <th>Boat Name</th>
                 <th>Start Time</th>
                 <th>End Time</th>
                 <th>Total Price</th>
@@ -38,7 +40,7 @@ $result = $stmt->get_result();
             <?php while($row = $result->fetch_assoc()): ?>
             <tr>
                 <td><?php echo $row['rent_id']; ?></td>
-                <td><?php echo $row['boat_id']; ?></td>
+                <td><?php echo $row['boat_name']; ?></td>
                 <td><?php echo $row['start_time']; ?></td>
                 <td><?php echo $row['end_time']; ?></td>
                 <td><?php echo $row['total_price']; ?></td>

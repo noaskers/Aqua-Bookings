@@ -8,46 +8,53 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$boat_id = $_GET['boat_id'];
+$rent_id = $_GET['id'];
 
-// Fetch boat details
-$query = "SELECT * FROM Boats WHERE boat_id = ?";
+// Fetch rent details
+$query = "SELECT * FROM Rents WHERE rent_id = ? AND user_id = ?";
 $stmt = $conn->prepare($query);
-$stmt->bind_param("i", $boat_id);
+$stmt->bind_param("ii", $rent_id, $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
-$boat = $result->fetch_assoc();
+$rent = $result->fetch_assoc();
+
+if (!$rent) {
+    header("Location: current_rents.php");
+    exit();
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $start_time = $_POST['start_time'];
     $end_time = $_POST['end_time'];
     $total_price = $_POST['total_price'];
 
-    // Insert new rent
-    $query = "INSERT INTO Rents (user_id, boat_id, start_time, end_time, total_price) VALUES (?, ?, ?, ?, ?)";
+    // Update rent details
+    $query = "UPDATE Rents SET start_time = ?, end_time = ?, total_price = ? WHERE rent_id = ? AND user_id = ?";
     $stmt = $conn->prepare($query);
-    $stmt->bind_param("iissd", $user_id, $boat_id, $start_time, $end_time, $total_price);
+    $stmt->bind_param("ssdii", $start_time, $end_time, $total_price, $rent_id, $user_id);
 
     if ($stmt->execute()) {
-        // Update boat availability
-        $query = "UPDATE Boats SET available = 0 WHERE boat_id = ?";
-        $stmt = $conn->prepare($query);
-        $stmt->bind_param("i", $boat_id);
-        $stmt->execute();
-
         header("Location: current_rents.php");
         exit();
     } else {
         $error = "Error: " . $stmt->error;
     }
 }
+
+// Fetch boat details
+$query = "SELECT * FROM Boats WHERE boat_id = ?";
+$stmt = $conn->prepare($query);
+$stmt->bind_param("i", $rent['boat_id']);
+$stmt->execute();
+$result = $stmt->get_result();
+$boat = $result->fetch_assoc();
 ?>
 
 <?php include 'header.php'; ?>
 
 <div class="container mt-5">
-    <h1 class="display-4">Rent <?php echo $boat['name']; ?></h1>
-    <p class="lead">Select the rental duration for the boat.</p>
+    <h1 class="display-4">Edit Rent for <?php echo $boat['name']; ?></h1>
+    <p class="lead">Update the rental duration for the boat.</p>
     <hr class="my-4">
     <?php if (isset($error)): ?>
         <div class="alert alert-danger"><?php echo $error; ?></div>
@@ -55,17 +62,17 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     <form method="POST" action="">
         <div class="form-group">
             <label for="start_time">Start Time</label>
-            <input type="datetime-local" class="form-control" id="start_time" name="start_time" required>
+            <input type="datetime-local" class="form-control" id="start_time" name="start_time" value="<?php echo date('Y-m-d\TH:i', strtotime($rent['start_time'])); ?>" required>
         </div>
         <div class="form-group">
             <label for="end_time">End Time</label>
-            <input type="datetime-local" class="form-control" id="end_time" name="end_time" required>
+            <input type="datetime-local" class="form-control" id="end_time" name="end_time" value="<?php echo date('Y-m-d\TH:i', strtotime($rent['end_time'])); ?>" required>
         </div>
         <div class="form-group">
             <label for="total_price">Total Price</label>
-            <input type="number" step="0.01" class="form-control" id="total_price" name="total_price" readonly required>
+            <input type="number" step="0.01" class="form-control" id="total_price" name="total_price" value="<?php echo $rent['total_price']; ?>" readonly required>
         </div>
-        <button type="submit" class="btn btn-primary">Confirm Rent</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
     </form>
 </div>
 
